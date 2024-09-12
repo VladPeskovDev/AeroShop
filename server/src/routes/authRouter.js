@@ -92,19 +92,19 @@ authRouter.get('/logout', (req, res) => {
 
 authRouter.get('/info', (req, res) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Извлекаем токен из заголовка Authorization
+    const token = authHeader && authHeader.split(' ')[1]; 
   
     if (!token) {
       return res.status(401).json({ error: 'Access token required' });
     }
   
-    // Проверяем валидность access токена
+    
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
       if (err) {
         return res.status(403).json({ error: 'Invalid or expired access token' });
       }
   
-      // Возвращаем ID пользователя
+      
       res.json({ userId: user.id });
     });
   });

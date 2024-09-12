@@ -21,7 +21,8 @@ import {
   Box,
 } from '@chakra-ui/react';
 import React, { useState } from 'react';
-import type { EditFileType, FileType } from '../../types/FileTypes';
+import axios from 'axios';
+import type { FileType, EditFileType } from '../../types/FileTypes';
 
 type FileCardTypes = {
   file: FileType;
@@ -31,24 +32,37 @@ type FileCardTypes = {
 
 export default function FileCard({ file, deleteHandler, editHandler }: FileCardTypes): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
   const [fileName, setFileName] = useState(file.file_name);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [detailedFile, setDetailedFile] = useState<FileType | null>(null);
 
+  // Обработка изменения файла для редактирования
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]); // Сохраняем выбранный файл для отправки
+      setSelectedFile(e.target.files[0]);
     }
   };
 
+  // Обработчик сохранения редактирования
   const handleSave = () => {
     const editData = {
       id: file.id,
       data: { file_name: fileName },
     };
-
-    // Отправляем данные на сервер с новым файлом, если он был выбран
     editHandler(editData, selectedFile || undefined);
     onClose();
+  };
+
+  // Получение подробной информации о файле
+  const fetchDetailedFile = async () => {
+    try {
+      const response = await axios.get(`/api/files/${file.id}`);
+      setDetailedFile(response.data); // Сохраняем данные файла для отображения в модальном окне
+      onDetailOpen(); // Открываем модальное окно
+    } catch (error) {
+      console.error('ошибка при получении подробной информации', error);
+    }
   };
 
   return (
@@ -79,6 +93,14 @@ export default function FileCard({ file, deleteHandler, editHandler }: FileCardT
             <Button onClick={() => deleteHandler(file.id)} variant="outline" colorScheme="red">
               Удалить
             </Button>
+            <Button onClick={fetchDetailedFile} variant="outline" colorScheme="blue">
+              Подробнее
+            </Button>
+            <a href={`/api/files/download/${file.id}`} download>
+              <Button variant="outline" colorScheme="green">
+                Скачать
+              </Button>
+            </a>
           </ButtonGroup>
         </CardFooter>
       </Card>
@@ -108,6 +130,34 @@ export default function FileCard({ file, deleteHandler, editHandler }: FileCardT
             </Button>
             <Button variant="outline" onClick={onClose}>
               Отмена
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Модальное окно для отображения подробной информации о файле */}
+      <Modal isOpen={isDetailOpen} onClose={onDetailClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Подробная информация о файле</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {detailedFile ? (
+              <Stack spacing={3}>
+                <Text>Имя файла: {detailedFile.file_name}</Text>
+                <Text>Расширение: {detailedFile.extension}</Text>
+                <Text>MIME-тип: {detailedFile.mime_type}</Text>
+                <Text>Размер файла: {detailedFile.size}</Text>
+                <Text>Дата загрузки: {new Date(detailedFile.upload_date).toLocaleString()}</Text>
+                <Image src={`/api/${detailedFile.file_path}`} alt={detailedFile.file_name} />
+              </Stack>
+            ) : (
+              <Text>Загрузка данных...</Text>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={onDetailClose}>
+              Закрыть
             </Button>
           </ModalFooter>
         </ModalContent>

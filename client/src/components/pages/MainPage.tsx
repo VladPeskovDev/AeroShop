@@ -13,7 +13,7 @@ export default function MainPage(): JSX.Element {
   return (
     <>
       <FileForm FilesSubmitHandler={FilesSubmitHandler} />
-      <SimpleGrid columns={3} spacing={5}>
+      <SimpleGrid columns={2} spacing={5}>
         {files.length > 0 ? (
           files.map((el) => (
             <FileCard
