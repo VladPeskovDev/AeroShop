@@ -5,8 +5,11 @@ const authRouter = require('./routes/authRouter');
 const tokenRouter = require('./routes/token.router');
 const fileRouter = require('./routes/fileRouter');
 const path = require('path');
+const cors = require('cors'); 
 
 const app = express();
+
+app.use(cors({ origin: '*', credentials: true }));
 
 app.use(morgan('dev'));
 app.use(cookieParser());

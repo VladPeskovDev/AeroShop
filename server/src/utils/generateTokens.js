@@ -4,7 +4,7 @@ const jwtConfig = require('../configs/jwt.config');
 
 const generateTokens = (payload) => ({
   accessToken: jwt.sign(
-    payload,
+    payload, // payload должен содержать информацию о пользователе
     process.env.ACCESS_TOKEN_SECRET,
     jwtConfig.access
   ),
