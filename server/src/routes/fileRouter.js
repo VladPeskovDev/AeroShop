@@ -25,14 +25,13 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
-  
       console.log(req.user);
   
       const { originalname, mimetype, size, filename, path: filePath } = req.file;
       const extension = path.extname(originalname);
   
       if (!req.user || !req.user.id) {
-        return res.status(400).json({ error: 'User ID not found' });
+        return res.status(400).json({ error: 'User ID не найден' });
       }
   
       const newFile = await File.create({
@@ -46,12 +45,12 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
       });
   
       res.status(201).json({
-        message: 'File uploaded successfully',
+        message: 'Файл успешно загружен',
         file: newFile,
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Failed to upload file' });
+      res.status(500).json({ error: 'Ошибка при загрузке файла' });
     }
   });
   
@@ -82,9 +81,9 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
     }
   });
 
+
   fileRouter.delete('/delete/:id', verifyAccessToken, async (req, res) => {
     const fileId = req.params.id;
-  
     try {
       
       console.log('User performing delete:', req.user);
@@ -95,7 +94,7 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
       }
   
       if (file.user_id !== req.user.id && req.user.id !== 1) {
-        return res.status(403).json({ error: 'Access denied. You can only delete your own files or must be an admin.' });
+        return res.status(403).json({ error: 'Access запрещен' });
       }
   
       const filePath = path.resolve(file.file_path);
@@ -108,7 +107,7 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
   
         await File.destroy({ where: { id: fileId } });
   
-        res.status(200).json({ message: 'File deleted successfully' });
+        res.status(200).json({ message: 'Файл успешно удален' });
       });
     } catch (error) {
       console.error(error);
@@ -116,6 +115,7 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
     }
   });
 
+  
   fileRouter.get('/:id', async (req, res) => {
     const fileId = req.params.id;
   
@@ -123,7 +123,7 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
       const file = await File.findByPk(fileId);
   
       if (!file) {
-        return res.status(404).json({ error: 'File not found' });
+        return res.status(404).json({ error: 'Файл не найден' });
       }
   
       res.status(200).json({
@@ -137,41 +137,36 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Failed to retrieve file information' });
+      res.status(500).json({ error: 'Файл не найден' });
     }
   });
 
+  
   fileRouter.put('/update/:id', verifyAccessToken, upload.single('file'), async (req, res) => {
     const fileId = req.params.id;
   
     try {
-    
       const existingFile = await File.findByPk(fileId);
   
       if (!existingFile) {
         return res.status(404).json({ error: 'файл не найден' });
       }
   
-      
       if (existingFile.user_id !== req.user.id && req.user.id !== 1) {
         return res.status(403).json({ error: 'Access запрещен' });
       }
   
-     
       const oldFilePath = path.resolve(existingFile.file_path);
   
-      
       fs.unlink(oldFilePath, async (err) => {
         if (err) {
           console.error(`Error deleting old file: ${err.message}`);
           return res.status(500).json({ error: 'Failed to delete old file' });
         }
   
-        
         const { originalname, mimetype, size, filename, path: newFilePath } = req.file;
         const extension = path.extname(originalname);
   
-        
         await File.update(
           {
             file_name: filename,      
@@ -192,6 +187,7 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
     }
   });
 
+ 
   fileRouter.get('/download/:id', async (req, res) => {
     const fileId = req.params.id;
   
@@ -203,17 +199,14 @@ fileRouter.post('/upload', verifyAccessToken, upload.single('file'), async (req,
         return res.status(404).json({ error: 'File not found' });
       }
   
-      
       const filePath = path.resolve(file.file_path);
   
-      
       fs.access(filePath, fs.constants.F_OK, (err) => {
         if (err) {
           console.error(`File not found on disk: ${err.message}`);
           return res.status(404).json({ error: 'File not found on disk' });
         }
   
-       
         res.download(filePath, file.file_name, (err) => {
           if (err) {
             console.error(`Error during file download: ${err.message}`);
